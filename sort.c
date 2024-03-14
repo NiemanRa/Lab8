@@ -31,6 +31,83 @@ size_t Size(void* ptr)
 // extraMemoryAllocated counts bytes of extra memory allocated
 void mergeSort(int pData[], int l, int r)
 {
+	// LEFT IS 0!  AND RIGHT IS DATA SIZE - 1!
+
+	if (l != r) // If Left Does NOT Equal Right
+	{
+		int m = (l + r) / 2; // Middle
+
+		mergeSort(pData, l, m); // Sorts Left
+		mergeSort(pData, m + 1, r); // Sorts Right - Floored Uneven Number Needs +1
+
+		printf("Testing l = %d r = %d m = %d\n", l, r, m);
+
+		/* Merge! */
+		// SHOULD ALL OF THESE BE size_t TOO???
+		int i; // Counter for Left
+		int j; // Counter for Right
+		int n1 = m - l + 1; // Left-Middle Value
+		int n2 = r - m; // Right-Middle Value
+
+		printf("%d and %d\n", n1, n2);
+
+		// Temps
+		size_t *tempLeft;
+		size_t *tempRight;
+		Alloc((size_t) tempLeft); // AM I ALLOCATING THESE RIGHT??  IT LOOKS LIKE A LOT?
+		Alloc((size_t) tempRight);
+
+		printf("Do things work past Alloc?\n"); // SOMETIMES?  NOT ALWAYS!
+
+		// Copy Data to Temps
+		for (i = 0; i < n1; i++)
+			tempLeft[i] = pData[l + i];
+		for (j = 0; j < n2; j++)
+			tempRight[j] = pData[m + 1 + j];
+
+		// Merge Temps
+		i = 0; 
+		j = 0;
+		int k = l;
+
+		while (i < n1 && j < n2)
+		{
+			if (tempLeft[i] <= tempRight[j])
+			{
+				pData[k] = tempLeft[i];
+				i++;
+			}
+
+			else
+			{
+				pData[k] = tempRight[j];
+				j++;
+			}
+			k++;
+		}
+
+		// Copy the Any Remaining Elements
+		while (i < n1)
+		{
+			pData[k] = tempLeft[i];
+			i++;
+			k++;
+		}
+
+
+		while (j < n2)
+		{
+			pData[k] = tempRight[j];
+			j++;
+			k++;
+		}
+
+		DeAlloc(tempLeft);
+		DeAlloc(tempRight);
+
+		printf("Do things work past DeAlloc?\n");
+	}
+	
 }
 
 // parses input file to an integer array
@@ -67,20 +144,25 @@ int parseData(char *inputFileName, int **ppData)
 // prints first and last 100 items in the data array
 void printArray(int pData[], int dataSz)
 {
-	int i, sz = dataSz - 100;
+	int i, sz = (dataSz > 100 ? dataSz - 100 : 0);
+	int firstHundred = (dataSz < 100 ? dataSz : 100);
 	printf("\tData:\n\t");
-	for (i=0;i<100;++i)
+
+	for (i = 0; i < firstHundred; ++i)
 	{
 		printf("%d ",pData[i]);
 	}
+
 	printf("\n\t");
-	
-	for (i=sz;i<dataSz;++i)
+
+	for (i = sz ; i < dataSz; ++i)
 	{
 		printf("%d ",pData[i]);
 	}
+
 	printf("\n\n");
 }
+
 
 int main(void)
 {
@@ -89,7 +171,7 @@ int main(void)
     double cpu_time_used;
 	char* fileNames[] = { "input1.txt", "input2.txt", "input3.txt", "input4.txt" };
 	
-	for (i=0;i<4;++i)
+	for (i = 0; i < 4; ++i)
 	{
 		int *pDataSrc, *pDataCopy;
 		int dataSz = parseData(fileNames[i], &pDataSrc);
