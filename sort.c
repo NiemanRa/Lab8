@@ -10,7 +10,7 @@ void *Alloc(size_t sz)
 	extraMemoryAllocated += sz;
 	size_t* ret = malloc(sizeof(size_t) + sz);
 	*ret = sz;
-	// printf("Extra memory allocated, size: %ld\n", sz); <---- UNCOMMENT LATER
+	printf("Extra memory allocated, size: %ld\n", sz);
 	return &ret[1];
 }
 
@@ -18,7 +18,7 @@ void DeAlloc(void* ptr)
 {
 	size_t* pSz = (size_t*)ptr - 1;
 	extraMemoryAllocated -= *pSz;
-	// printf("Extra memory deallocated, size: %ld\n", *pSz); // <---- UNCOMMENT LATER
+	printf("Extra memory deallocated, size: %ld\n", *pSz);
 	free((size_t*)ptr - 1);
 }
 
@@ -26,8 +26,6 @@ size_t Size(void* ptr)
 {
 	return ((size_t*)ptr)[-1];
 }
-
-void printArray(int pData[], int dataSz);
 
 // implement merge sort
 // extraMemoryAllocated counts bytes of extra memory allocated
@@ -39,42 +37,31 @@ void mergeSort(int pData[], int l, int r)
 	{
 		int m = (l + r) / 2; // Middle
 
-		mergeSort(pData, l, m); // Sorts Left
-		mergeSort(pData, m + 1, r); // Sorts Right - Floored Uneven Number Needs +1
-
-		// printf("Testing l = %d r = %d m = %d\n", l, r, m);
-
 		/* Merge! */
-		int i; // Counter for Left
-		int j; // Counter for Right
+		int i = 0; // Counter for Left
+		int j = 0; // Counter for Right
 		int n2 = m + 1; // Right-Middle Value
-
-		// printf("%d and %d\n", n1, n2);
 
 		// Temps
 		int* tempLeft = (int*) Alloc(sizeof(int) * (m + 1));
-		int* tempRight = (int*) Alloc(sizeof(int) * (r - m + 1));
-
-		printf("Do things work past Alloc?\n");
+		int* tempRight = (int*) Alloc(sizeof(int) * (r - m));
 
 		// Copy Data to Temps
 		for (i = 0; i <= m; i++)
 			tempLeft[i] = pData[i];
-		for (j = i; j <= n2; j++)
+		for (j = i; j <= r; j++)
 			tempRight[j - n2] = pData[j];
 
-		printf("Do things work past copy temps?\n");
-		printArray(tempLeft, m + 1);
-		printArray(tempRight, r - m + 1);
+        mergeSort(tempLeft, 0, m);
+        mergeSort(tempRight, 0, r - m - 1);
 
 		// Merge Temps
 		i = 0; // Reset
 		j = 0; // Reset
 		int k = 0;
 
-		while (i <= m && j <= (r - n2))
+		while (i <= m && j < (r - m))
 		{
-			printf("%d, %d, %d\n", i, j, m);
 			if (tempLeft[i] <= tempRight[j])
 			{
 				pData[k] = tempLeft[i];
@@ -90,9 +77,6 @@ void mergeSort(int pData[], int l, int r)
 			k++;
 		}
 
-		// printf("Do things work past merging?\n");
-		// printf("i = %d, j = %d, k = %d\n", i, j, k);
-
 		// Copy the Any Remaining Elements
 		while (i <= m)
 		{
@@ -107,15 +91,8 @@ void mergeSort(int pData[], int l, int r)
 			j++;
 			k++;
 		}
-
-		// printf("Do things work past copying remaining elements?\n");
-		// printf("%p\n", tempLeft);
-
 		DeAlloc(tempLeft);
-		// printf("Free Left?\n");
 		DeAlloc(tempRight);
-
-		// printf("Do things work past DeAlloc?\n");
 	}
 }
 
