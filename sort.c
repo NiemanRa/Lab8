@@ -31,8 +31,6 @@ size_t Size(void* ptr)
 // extraMemoryAllocated counts bytes of extra memory allocated
 void mergeSort(int pData[], int l, int r)
 {
-	// LEFT IS 0!  AND RIGHT IS DATA SIZE - 1!
-
 	if (l < r) // If Left is Less than Right
 	{
 		int m = (l + r) / 2; // Middle
