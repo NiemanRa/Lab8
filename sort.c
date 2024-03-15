@@ -10,7 +10,7 @@ void *Alloc(size_t sz)
 	extraMemoryAllocated += sz;
 	size_t* ret = malloc(sizeof(size_t) + sz);
 	*ret = sz;
-	printf("Extra memory allocated, size: %ld\n", sz);
+	// printf("Extra memory allocated, size: %ld\n", sz); <---- UNCOMMENT LATER
 	return &ret[1];
 }
 
@@ -18,7 +18,7 @@ void DeAlloc(void* ptr)
 {
 	size_t* pSz = (size_t*)ptr - 1;
 	extraMemoryAllocated -= *pSz;
-	printf("Extra memory deallocated, size: %ld\n", *pSz);
+	// printf("Extra memory deallocated, size: %ld\n", *pSz); // <---- UNCOMMENT LATER
 	free((size_t*)ptr - 1);
 }
 
@@ -27,51 +27,54 @@ size_t Size(void* ptr)
 	return ((size_t*)ptr)[-1];
 }
 
+void printArray(int pData[], int dataSz);
+
 // implement merge sort
 // extraMemoryAllocated counts bytes of extra memory allocated
 void mergeSort(int pData[], int l, int r)
 {
 	// LEFT IS 0!  AND RIGHT IS DATA SIZE - 1!
 
-	if (l != r) // If Left Does NOT Equal Right
+	if (l < r) // If Left is Less than Right
 	{
 		int m = (l + r) / 2; // Middle
 
 		mergeSort(pData, l, m); // Sorts Left
 		mergeSort(pData, m + 1, r); // Sorts Right - Floored Uneven Number Needs +1
 
-		printf("Testing l = %d r = %d m = %d\n", l, r, m);
+		// printf("Testing l = %d r = %d m = %d\n", l, r, m);
 
 		/* Merge! */
-		// SHOULD ALL OF THESE BE size_t TOO???
 		int i; // Counter for Left
 		int j; // Counter for Right
-		int n1 = m - l + 1; // Left-Middle Value
-		int n2 = r - m; // Right-Middle Value
+		int n2 = m + 1; // Right-Middle Value
 
-		printf("%d and %d\n", n1, n2);
+		// printf("%d and %d\n", n1, n2);
 
 		// Temps
-		size_t *tempLeft;
-		size_t *tempRight;
-		Alloc((size_t) tempLeft); // AM I ALLOCATING THESE RIGHT??  IT LOOKS LIKE A LOT?
-		Alloc((size_t) tempRight);
+		int* tempLeft = (int*) Alloc(sizeof(int) * (m + 1));
+		int* tempRight = (int*) Alloc(sizeof(int) * (r - m + 1));
 
-		printf("Do things work past Alloc?\n"); // SOMETIMES?  NOT ALWAYS!
+		printf("Do things work past Alloc?\n");
 
 		// Copy Data to Temps
-		for (i = 0; i < n1; i++)
-			tempLeft[i] = pData[l + i];
-		for (j = 0; j < n2; j++)
-			tempRight[j] = pData[m + 1 + j];
+		for (i = 0; i <= m; i++)
+			tempLeft[i] = pData[i];
+		for (j = i; j <= n2; j++)
+			tempRight[j - n2] = pData[j];
+
+		printf("Do things work past copy temps?\n");
+		printArray(tempLeft, m + 1);
+		printArray(tempRight, r - m + 1);
 
 		// Merge Temps
-		i = 0; 
-		j = 0;
-		int k = l;
+		i = 0; // Reset
+		j = 0; // Reset
+		int k = 0;
 
-		while (i < n1 && j < n2)
+		while (i <= m && j <= (r - n2))
 		{
+			printf("%d, %d, %d\n", i, j, m);
 			if (tempLeft[i] <= tempRight[j])
 			{
 				pData[k] = tempLeft[i];
@@ -83,31 +86,37 @@ void mergeSort(int pData[], int l, int r)
 				pData[k] = tempRight[j];
 				j++;
 			}
+
 			k++;
 		}
 
+		// printf("Do things work past merging?\n");
+		// printf("i = %d, j = %d, k = %d\n", i, j, k);
+
 		// Copy the Any Remaining Elements
-		while (i < n1)
+		while (i <= m)
 		{
 			pData[k] = tempLeft[i];
 			i++;
 			k++;
 		}
 
-
-		while (j < n2)
+		while (j <= (r - n2))
 		{
 			pData[k] = tempRight[j];
 			j++;
 			k++;
 		}
 
+		// printf("Do things work past copying remaining elements?\n");
+		// printf("%p\n", tempLeft);
+
 		DeAlloc(tempLeft);
+		// printf("Free Left?\n");
 		DeAlloc(tempRight);
 
-		printf("Do things work past DeAlloc?\n");
+		// printf("Do things work past DeAlloc?\n");
 	}
-	
 }
 
 // parses input file to an integer array
@@ -117,7 +126,7 @@ int parseData(char *inputFileName, int **ppData)
 	int dataSz = 0;
 	int i, n, *data;
 	*ppData = NULL;
-	
+
 	if (inFile)
 	{
 		fscanf(inFile,"%d\n",&dataSz);
@@ -137,7 +146,7 @@ int parseData(char *inputFileName, int **ppData)
 
 		fclose(inFile);
 	}
-	
+
 	return dataSz;
 }
 
@@ -170,21 +179,21 @@ int main(void)
 	int i;
     double cpu_time_used;
 	char* fileNames[] = { "input1.txt", "input2.txt", "input3.txt", "input4.txt" };
-	
+
 	for (i = 0; i < 4; ++i)
 	{
 		int *pDataSrc, *pDataCopy;
 		int dataSz = parseData(fileNames[i], &pDataSrc);
-		
+
 		if (dataSz <= 0)
 			continue;
-		
+
 		pDataCopy = (int *)malloc(sizeof(int)*dataSz);
-	
+
 		printf("---------------------------\n");
 		printf("Dataset Size : %d\n",dataSz);
 		printf("---------------------------\n");
-		
+
 		printf("Merge Sort:\n");
 		memcpy(pDataCopy, pDataSrc, dataSz*sizeof(int));
 		extraMemoryAllocated = 0;
@@ -195,9 +204,9 @@ int main(void)
 		printf("\truntime\t\t\t: %.1lf\n",cpu_time_used);
 		printf("\textra memory allocated\t: %d\n",extraMemoryAllocated);
 		printArray(pDataCopy, dataSz);
-		
+
 		free(pDataCopy);
 		free(pDataSrc);
 	}
-	
+
 }
